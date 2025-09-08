@@ -1,31 +1,142 @@
 import pandas as pd
 from sodapy import Socrata
 
+#NYC-311 data Project: Phase 1
+#Author: Edward Hinson
+#Description: This script is used to explore the NYC-311 data. It is used to get a sense of the data and to prepare it for analysis.
+
+
 pd.set_option("display.max_columns", None)
 pd.set_option("display.max_rows", 100)
 pd.set_option("display.width", 1000)
 
 APP_TOKEN = "DjO84VZPdzu9XsGU9WNTUb98F"
+#Setting a longer timeout than the default makes the request more reliable
+TIMEOUT_TIME = 120
 
-client  = Socrata("data.cityofnewyork.us", APP_TOKEN, timeout=120)
+client  = Socrata("data.cityofnewyork.us", APP_TOKEN, timeout=TIMEOUT_TIME)
 
 DATASET_ID = "erm2-nwe9"
-LIMIT = 5000
+#The limit to the number of records I ask for
+LIMIT = 1000000 #1 million is a limit that seems to run reliably but is still a large number of records
 
-print(f"Fetching data from {DATASET_ID} with limit {LIMIT}...")
-results = client.get(DATASET_ID, 
-                     limit=LIMIT,
-                     where="agency = 'NYPD'"
-                     )
-print(f"Found {len(results)} records")
+start_year = 2020
+end_year = 2024
 
-results_df = pd.DataFrame.from_records(results)
+#First I want to get data for a 4 year period. I wll do it in chunks of one year to avoid timeouts but this can still take a while.
+#Be Patient!
+#To control the number of records, I only want complaints to the NYPD in Manhattan.
+all_results = []
+for year in range(start_year, end_year):
+    start = f"{year}-01-01"
+    end = f"{year}-12-31"
+    print(f"Fetching data from {DATASET_ID} with limit {LIMIT} for {year}...")
+    results = client.get(DATASET_ID, 
+                         limit=LIMIT,
+                         where=f"agency = 'NYPD' AND borough = 'MANHATTAN' AND created_date BETWEEN '{start}' AND '{end}'"
+                         )
+    all_results.extend(results)
+    print(f"Found {len(results)} records for {year}")
 
-#Print the column names first to know what we are working with
-print(results_df.columns)
+#Now I convert the results to a dataframe
+results_df = pd.DataFrame.from_records(all_results)
 
-columns = ["created_date", "complaint_type", "borough", "agency"]
+#I next want to check column names and data types
+print(results_df.dtypes)
 
-head_size = 100
+#I do not need all of these columns. I know the agency is the NYPD and the borough is Manhattan. I also do not need the bbl and the agency_name column
+#has bad information according to the documentation. Exact location is not needed for my analysis.
+#Columns to keep:
+keep_columns = [
+    "unique_key", 
+    "created_date", 
+    "closed_date", 
+    "complaint_type", 
+    "descriptor", 
+    "incident_zip", 
+    "status", 
+    "resolution_description", 
+    "community_board", 
+    "open_data_channel_type", 
+    "park_facility_name", 
+    "park_borough", 
+    "location", 
+    "location_type"]
 
+drop_columns = []
+for col in results_df.columns:
+    if col not in keep_columns:
+        drop_columns.append(col)
+results_df.drop(columns=drop_columns, inplace=True)
+
+print("Dropped columns:")
+for col in drop_columns:
+    print(f"- {col}")
+
+#Print to see the data types again
+print(results_df.dtypes)
+
+#Next I want to convert the date columns to datetimes for use in plots and later analysis
+results_df["created_date"] = pd.to_datetime(results_df["created_date"])
+results_df["closed_date"] = pd.to_datetime(results_df["closed_date"])
+
+#Check the data types again
+print("Data types after conversion:")
+print(results_df.dtypes)
+
+#Okay new lets clean up some more. Check for Nan values in each column.
+print("Nan values in each column:")
+print(results_df.isna().sum())
+
+#It looks like the location_type column has a lot of Nan values but not so many that I will drop it. 
+#I will keep it for now and replace the Nan values with "Unknown" for visualization purposes later.
+results_df["location_type"] = results_df["location_type"].fillna("Unknown")
+
+#Now I want to drop rows with missing critical information. It may not make a big difference but it seems like a good idea to do.
+print("Dropping rows with missing critical information...")
+rows_before = len(results_df)
+print(f"Rows before dropping: {rows_before}")
+
+#Drop rows missing critical information
+results_df.dropna(subset=['created_date', 'complaint_type'], inplace=True)
+
+# Number of rows after dropping
+rows_after = len(results_df)
+print(f"Rows after dropping: {rows_after}")
+
+# Number of rows dropped
+print(f"Rows dropped: {rows_before - rows_after}")
+
+#I am most interested in the NYPD complaints and in what borough they occured.
+columns = ["created_date", "complaint_type", "descriptor", "status", "location_type", "open_data_channel_type"]
+
+#Take a look at the first few rows of the dataframe
+print("First few rows of the dataframe:")
+head_size = 25
 print(results_df[columns].head(head_size))
+
+#I want to add some additional columns to the dataframe for analysis. I want to know the year, month, and day of the week of the complaint.
+results_df["year"] = results_df["created_date"].dt.year
+results_df["month"] = results_df["created_date"].dt.month
+results_df["day_of_week"] = results_df["created_date"].dt.day_name()
+
+print("--Value counts for key columns--")
+print(results_df['complaint_type'].value_counts().head(10))
+print(results_df['descriptor'].value_counts().head(10))
+print(results_df['status'].value_counts().head(10))
+print(results_df['location_type'].value_counts().head(10))
+print(results_df['open_data_channel_type'].value_counts())
+print(results_df['month'].value_counts())
+print(results_df['day_of_week'].value_counts())
+
+print("Data types after adding new columns:")
+print(results_df.dtypes)
+
+#A CSV file for the dataframe
+results_df.to_csv("nyc_311_data.csv", index=False)
+
+#Print some summary statistics
+print(f"""Between {start_year} and {end_year} there were {len(results_df)} complaints. 
+The day of the week with the most complaints was {results_df['day_of_week'].value_counts().idxmax()} 
+while the month with the most complaints was {results_df['month'].value_counts().idxmax()}. 
+The three most common complaint types were {results_df['complaint_type'].value_counts().head(3).index.tolist()}.""")
