@@ -1,10 +1,9 @@
 import pandas as pd
 from sodapy import Socrata
 
-#NYC-311 data Project: Phase 1
+#NYC-311 data Project: Phase 2
 #Author: Edward Hinson
 #Description: This script is used to explore the NYC-311 data. It is used to get a sense of the data and to prepare it for analysis.
-
 
 pd.set_option("display.max_columns", None)
 pd.set_option("display.max_rows", 100)
@@ -20,20 +19,45 @@ DATASET_ID = "erm2-nwe9"
 #The limit to the number of records I ask for
 LIMIT = 1000000 #1 million is a limit that seems to run reliably but is still a large number of records
 
-start_year = 2020
-end_year = 2024
+print("Enter a borough, a start year, and an end year to get data for that borough between those years.")
+
+while True:
+    start_year = int(input("Enter the start year (2015-2024): "))
+    if start_year >= 2015 and start_year < 2025:
+        break
+    else:
+        print("Invalid year. Please enter a year between 2015 and 2024.")
+
+while True:
+    end_year = int(input("Enter the end year (2015-2024): "))
+    if start_year > end_year:
+        print("End year must be greater than or equal to start year.")
+    elif end_year >= 2015 and end_year < 2025:
+        break
+    else:
+        print("Invalid year. Please enter a year between 2015 and 2024.")
+
+while True:
+    borough = input("Enter the borough (Bronx, Brooklyn, Manhattan, Queens, Staten Island): ")
+    if borough.lower() in ["bronx", "brooklyn", "manhattan", "queens", "staten island"]:
+        borough = borough.upper()
+        break
+    else:
+        print("Invalid borough. Please enter a borough.")
 
 #First I want to get data for a 4 year period. I wll do it in chunks of one year to avoid timeouts but this can still take a while.
 #Be Patient!
 #To control the number of records, I only want complaints to the NYPD in Manhattan.
+print(f"Fetching data from {DATASET_ID} for {borough} between {start_year} and {end_year}...")
 all_results = []
-for year in range(start_year, end_year):
+#Adding 1 to the end year to include the year in the range
+for year in range(start_year, end_year + 1):
     start = f"{year}-01-01"
     end = f"{year}-12-31"
-    print(f"Fetching data from {DATASET_ID} with limit {LIMIT} for {year}...")
+    print(f"Fetching data from {DATASET_ID} with limit {LIMIT} for {borough} in {year}...")
     results = client.get(DATASET_ID, 
                          limit=LIMIT,
-                         where=f"agency = 'NYPD' AND borough = 'MANHATTAN' AND created_date BETWEEN '{start}' AND '{end}'"
+                         where=f"agency = 'NYPD' AND borough = '{borough}' AND created_date BETWEEN '{start}' AND '{end}'"
                          )
     all_results.extend(results)
     print(f"Found {len(results)} records for {year}")
