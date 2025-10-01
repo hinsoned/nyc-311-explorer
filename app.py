@@ -35,7 +35,7 @@ def plot_monthly_complaints(results_df, borough, start_year, end_year):
 def plot_top_complaint_types(results_df, borough, start_year, end_year, total_records):
     top_complaints = results_df["complaint_type"].value_counts().head(10)
     plt.figure(figsize=(10,6))
-    sns.barplot(x=top_complaints.index, y=top_complaints.values, palette="viridis")
+    sns.barplot(x=top_complaints.index, y=top_complaints.values, palette="pastel", hue=top_complaints.index)
     plt.title(f"Top 10 Complaint Types in {borough} ({start_year}-{end_year}) with {total_records} total complaints")
     plt.xlabel("Complaint Type")
     plt.ylabel("Number of Complaints")
@@ -43,6 +43,19 @@ def plot_top_complaint_types(results_df, borough, start_year, end_year, total_re
     plt.tight_layout()
     plt.savefig(f"{borough}_top_complaint_types.png")
     open_image(f"{borough}_top_complaint_types.png")
+    plt.close()
+
+#Heatmap for seasonality of complaints
+def plot_seasonality_heatmap(results_df, borough, start_year, end_year):
+    pivot = results_df.pivot_table(index="year", columns="month", values="unique_key", aggfunc="count")
+    plt.figure(figsize=(12,6))
+    sns.heatmap(pivot, cmap="YlOrRd", annot=True, fmt="d")
+    plt.title(f"Complaint Seasonality Heatmap in {borough} ({start_year}-{end_year})")
+    plt.xlabel("Month")
+    plt.ylabel("Year")
+    plt.tight_layout()
+    plt.savefig(f"{borough}_seasonality_heatmap.png")
+    open_image(f"{borough}_seasonality_heatmap.png")
     plt.close()
 
 def main():
@@ -207,6 +220,7 @@ def main():
     #Plots
     plot_monthly_complaints(results_df, borough, start_year, end_year)
     plot_top_complaint_types(results_df, borough, start_year, end_year, total_records)
+    plot_seasonality_heatmap(results_df, borough, start_year, end_year)
 
     #Print some summary statistics
     print(f"""Between {start_year} and {end_year} there were {len(results_df)} complaints. 
