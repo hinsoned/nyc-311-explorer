@@ -188,7 +188,7 @@ def main():
     print("Data types after conversion:")
     print(results_df.dtypes)
 
-    #Okay new lets clean up some more. Check for Nan values in each column.
+    #Okay now lets clean up some more. Check for Nan values in each column.
     print("Nan values in each column:")
     print(results_df.isna().sum())
 
@@ -224,14 +224,14 @@ def main():
     results_df["month"] = results_df["created_date"].dt.month
     results_df["day_of_week"] = results_df["created_date"].dt.day_name()
 
-    print("--Value counts for key columns--")
-    print(results_df['complaint_type'].value_counts().head(10))
-    print(results_df['descriptor'].value_counts().head(10))
-    print(results_df['status'].value_counts().head(10))
-    print(results_df['location_type'].value_counts().head(10))
-    print(results_df['open_data_channel_type'].value_counts())
-    print(results_df['month'].value_counts())
-    print(results_df['day_of_week'].value_counts())
+    #print("--Value counts for key columns--")
+    #print(results_df['complaint_type'].value_counts().head(10))
+    #print(results_df['descriptor'].value_counts().head(10))
+    #print(results_df['status'].value_counts().head(10))
+    #print(results_df['location_type'].value_counts().head(10))
+    #print(results_df['open_data_channel_type'].value_counts())
+    #print(results_df['month'].value_counts())
+    #print(results_df['day_of_week'].value_counts())
 
     print("Data types after adding new columns:")
     print(results_df.dtypes)
