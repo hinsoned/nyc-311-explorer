@@ -5,6 +5,7 @@ import seaborn as sns
 import platform
 import subprocess
 import os
+from datetime import datetime
 
 #NYC-311 data Project: Phase 2
 #Author: Edward Hinson
@@ -20,7 +21,7 @@ def open_image(path):
         subprocess.call(["xdg-open", path])#This opens the image on Linux
 
 #Line for monthly complaint totals
-def plot_monthly_complaints(results_df, borough, start_year, end_year):
+def plot_monthly_complaints(results_df, borough, start_year, end_year, export_folder):
     monthly_counts = results_df.groupby(["year", "month"]).size()
     monthly_counts.plot(kind="line", marker="o", figsize=(12,6))
     plt.title(f"{borough} NYPD 311 Complaints per Month ({start_year}-{end_year})")
@@ -28,11 +29,11 @@ def plot_monthly_complaints(results_df, borough, start_year, end_year):
     plt.ylabel("Number of Complaints")
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig(f"{borough}_monthly_complaints.png")
-    open_image(f"{borough}_monthly_complaints.png")
+    plt.savefig(f"{export_folder}/{borough}_monthly_complaints.png")
+    open_image(f"{export_folder}/{borough}_monthly_complaints.png")
     plt.close()
 
-def plot_top_complaint_types(results_df, borough, start_year, end_year, total_records):
+def plot_top_complaint_types(results_df, borough, start_year, end_year, total_records, export_folder):
     top_complaints = results_df["complaint_type"].value_counts().head(10)
     plt.figure(figsize=(10,6))
     sns.barplot(x=top_complaints.index, y=top_complaints.values, palette="pastel", hue=top_complaints.index)
@@ -41,12 +42,12 @@ def plot_top_complaint_types(results_df, borough, start_year, end_year, total_re
     plt.ylabel("Number of Complaints")
     plt.xticks(rotation=45, ha="right")
     plt.tight_layout()
-    plt.savefig(f"{borough}_top_complaint_types.png")
-    open_image(f"{borough}_top_complaint_types.png")
+    plt.savefig(f"{export_folder}/{borough}_top_complaint_types.png")
+    open_image(f"{export_folder}/{borough}_top_complaint_types.png")
     plt.close()
 
 #Heatmap for seasonality of complaints
-def plot_seasonality_heatmap(results_df, borough, start_year, end_year):
+def plot_seasonality_heatmap(results_df, borough, start_year, end_year, export_folder):
     pivot = results_df.pivot_table(index="year", columns="month", values="unique_key", aggfunc="count")
     plt.figure(figsize=(12,6))
     sns.heatmap(pivot, cmap="YlOrRd", annot=True, fmt="d")
@@ -54,8 +55,8 @@ def plot_seasonality_heatmap(results_df, borough, start_year, end_year):
     plt.xlabel("Month")
     plt.ylabel("Year")
     plt.tight_layout()
-    plt.savefig(f"{borough}_seasonality_heatmap.png")
-    open_image(f"{borough}_seasonality_heatmap.png")
+    plt.savefig(f"{export_folder}/{borough}_seasonality_heatmap.png")
+    open_image(f"{export_folder}/{borough}_seasonality_heatmap.png")
     plt.close()
 
 def main():
@@ -215,13 +216,20 @@ def main():
     print("Data types after adding new columns:")
     print(results_df.dtypes)
 
+    #Timestamp to differentiate between export folders
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+    #Create an export folder for the plots
+    export_folder = f"{borough}_{start_year}_{end_year}_{timestamp}"
+    os.makedirs(export_folder, exist_ok=True)
+
     #A CSV file for the dataframe
-    results_df.to_csv("nyc_311_data.csv", index=False)
+    results_df.to_csv(f"{export_folder}/nyc_311_data_{timestamp}.csv", index=False)
 
     #Plots
-    plot_monthly_complaints(results_df, borough, start_year, end_year)
-    plot_top_complaint_types(results_df, borough, start_year, end_year, total_records)
-    plot_seasonality_heatmap(results_df, borough, start_year, end_year)
+    plot_monthly_complaints(results_df, borough, start_year, end_year, export_folder)
+    plot_top_complaint_types(results_df, borough, start_year, end_year, total_records, export_folder)
+    plot_seasonality_heatmap(results_df, borough, start_year, end_year, export_folder)
 
     #Print some summary statistics
     print(f"""Between {start_year} and {end_year} there were {len(results_df)} complaints. 
