@@ -11,6 +11,35 @@ from datetime import datetime
 #Author: Edward Hinson
 #Description: This script is used to explore the NYC-311 data. It is used to get a sense of the data and to prepare it for analysis.
 
+#function to prompt user
+def prompt_user():
+    print("Enter a borough, a start year, and an end year to get data for that borough between those years.")
+
+    while True:
+        start_year = int(input("Enter the start year (2015-2024): "))
+        if start_year >= 2015 and start_year < 2025:
+            break
+        else:
+            print("Invalid year. Please enter a year between 2015 and 2024.")
+
+    while True:
+        end_year = int(input("Enter the end year (2015-2024): "))
+        if start_year > end_year:
+            print("End year must be greater than or equal to start year.")
+        elif end_year >= 2015 and end_year < 2025:
+            break
+        else:
+            print("Invalid year. Please enter a year between 2015 and 2024.")
+
+    while True:
+        borough = input("Enter the borough (Bronx, Brooklyn, Manhattan, Queens, Staten Island): ")
+        if borough.lower() in ["bronx", "brooklyn", "manhattan", "queens", "staten island"]:
+            borough = borough.upper()
+            break
+        else:
+            print("Invalid borough. Please enter a borough.")
+    return borough, start_year, end_year
+
 def open_image(path):
     system = platform.system()#This gets the operating system
     if system == "Darwin":  # macOS
@@ -74,31 +103,8 @@ def main():
     #The limit to the number of records I ask for
     LIMIT = 1000000 #1 million is a limit that seems to run reliably but is still a large number of records
 
-    print("Enter a borough, a start year, and an end year to get data for that borough between those years.")
-
-    while True:
-        start_year = int(input("Enter the start year (2015-2024): "))
-        if start_year >= 2015 and start_year < 2025:
-            break
-        else:
-            print("Invalid year. Please enter a year between 2015 and 2024.")
-
-    while True:
-        end_year = int(input("Enter the end year (2015-2024): "))
-        if start_year > end_year:
-            print("End year must be greater than or equal to start year.")
-        elif end_year >= 2015 and end_year < 2025:
-            break
-        else:
-            print("Invalid year. Please enter a year between 2015 and 2024.")
-
-    while True:
-        borough = input("Enter the borough (Bronx, Brooklyn, Manhattan, Queens, Staten Island): ")
-        if borough.lower() in ["bronx", "brooklyn", "manhattan", "queens", "staten island"]:
-            borough = borough.upper()
-            break
-        else:
-            print("Invalid borough. Please enter a borough.")
+    #Prompt user for borough, start year, and end year
+    borough, start_year, end_year = prompt_user()
 
     #First I want to get data for a 4 year period. I wll do it in chunks of one year to avoid timeouts but this can still take a while.
     #Be Patient!
