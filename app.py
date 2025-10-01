@@ -27,8 +27,22 @@ def plot_monthly_complaints(results_df, borough, start_year, end_year):
     plt.xlabel("Year, Month")
     plt.ylabel("Number of Complaints")
     plt.grid(True)
+    plt.tight_layout()
     plt.savefig(f"{borough}_monthly_complaints.png")
     open_image(f"{borough}_monthly_complaints.png")
+    plt.close()
+
+def plot_top_complaint_types(results_df, borough, start_year, end_year, total_records):
+    top_complaints = results_df["complaint_type"].value_counts().head(10)
+    plt.figure(figsize=(10,6))
+    sns.barplot(x=top_complaints.index, y=top_complaints.values, palette="viridis")
+    plt.title(f"Top 10 Complaint Types in {borough} ({start_year}-{end_year}) with {total_records} total complaints")
+    plt.xlabel("Complaint Type")
+    plt.ylabel("Number of Complaints")
+    plt.xticks(rotation=45, ha="right")
+    plt.tight_layout()
+    plt.savefig(f"{borough}_top_complaint_types.png")
+    open_image(f"{borough}_top_complaint_types.png")
     plt.close()
 
 def main():
@@ -88,6 +102,10 @@ def main():
                             )
         all_results.extend(results)
         print(f"Found {len(results)} records for {year}")
+
+    #total number of records
+    total_records = len(all_results)
+    print(f"Total number of records: {total_records}")
 
     #Now I convert the results to a dataframe
     results_df = pd.DataFrame.from_records(all_results)
@@ -188,6 +206,7 @@ def main():
 
     #Plots
     plot_monthly_complaints(results_df, borough, start_year, end_year)
+    plot_top_complaint_types(results_df, borough, start_year, end_year, total_records)
 
     #Print some summary statistics
     print(f"""Between {start_year} and {end_year} there were {len(results_df)} complaints. 
