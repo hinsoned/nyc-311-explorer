@@ -102,6 +102,7 @@ def main():
     #First I want to get data for a 4 year period. I wll do it in chunks of one year to avoid timeouts but this can still take a while.
     #Be Patient!
     #To control the number of records, I only want complaints to the NYPD in Manhattan.
+    print("Be Patient! This may take a while...")
     print(f"Fetching data from {DATASET_ID} for {borough} between {start_year} and {end_year}...")
     all_results = []
     #Adding 1 to the end year to include the year in the range
