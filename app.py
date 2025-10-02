@@ -142,6 +142,25 @@ def remove_unnecessary_columns(results_df):
 
     return results_df
 
+#function to drop bad rows
+def drop_bad_rows(results_df):
+    #Now I want to drop rows with missing critical information. It may not make a big difference but it seems like a good idea to do.
+    print("Dropping rows with missing critical information...")
+    rows_before = len(results_df)
+    print(f"Rows before dropping: {rows_before}")
+
+    #Drop rows missing critical information
+    results_df.dropna(subset=['created_date', 'complaint_type'], inplace=True)
+
+    # Number of rows after dropping
+    rows_after = len(results_df)
+    print(f"Rows after dropping: {rows_after}")
+
+    # Number of rows dropped
+    print(f"Rows dropped: {rows_before - rows_after}")
+
+    return results_df
+
 def main():
     pd.set_option("display.max_columns", None)
     pd.set_option("display.max_rows", 100)
@@ -196,20 +215,8 @@ def main():
     #I will keep it for now and replace the Nan values with "Unknown" for visualization purposes later.
     results_df["location_type"] = results_df["location_type"].fillna("Unknown")
 
-    #Now I want to drop rows with missing critical information. It may not make a big difference but it seems like a good idea to do.
-    print("Dropping rows with missing critical information...")
-    rows_before = len(results_df)
-    print(f"Rows before dropping: {rows_before}")
-
-    #Drop rows missing critical information
-    results_df.dropna(subset=['created_date', 'complaint_type'], inplace=True)
-
-    # Number of rows after dropping
-    rows_after = len(results_df)
-    print(f"Rows after dropping: {rows_after}")
-
-    # Number of rows dropped
-    print(f"Rows dropped: {rows_before - rows_after}")
+    #drop bad rows
+    results_df = drop_bad_rows(results_df)
 
     #I am most interested in the NYPD complaints and in what borough they occured.
     columns = ["created_date", "complaint_type", "descriptor", "status", "location_type", "open_data_channel_type"]
