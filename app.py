@@ -47,13 +47,28 @@ def get_results(client, DATASET_ID, LIMIT, borough, start_year, end_year):
     for year in range(start_year, end_year + 1):
         start = f"{year}-01-01"
         end = f"{year}-12-31"
-        print(f"Fetching data from {DATASET_ID} with limit {LIMIT} for {borough} in {year}...")
-        results = client.get(DATASET_ID, 
-                            limit=LIMIT,
-                            where=f"agency = 'NYPD' AND borough = '{borough}' AND created_date BETWEEN '{start}' AND '{end}'"
-                            )
-        all_results.extend(results)
-        print(f"Found {len(results)} records for {year}")
+
+        while True:
+            try:
+                print(f"Fetching data from {DATASET_ID} with limit {LIMIT} for {borough} in {year}...")
+                results = client.get(DATASET_ID, 
+                                    limit=LIMIT,
+                                    where=f"agency = 'NYPD' AND borough = '{borough}' AND created_date BETWEEN '{start}' AND '{end}'"
+                                    )
+                all_results.extend(results)
+                print(f"Found {len(results)} records for {year}")
+                break
+            except Exception as e:
+                print(f"Error fetching data from {DATASET_ID} with limit {LIMIT} for {borough} in {year}: {e}")
+                choice = input("Press R to retry or Q to quit: ")
+                if choice.lower() == "r":
+                    time.sleep(1)
+                    continue
+                elif choice.lower() == "q":
+                    print("Quitting...")
+                    sys.exit(1)
+                else:
+                    print("Invalid choice. Please enter R to retry or Q to quit.")
 
     #total number of records
     total_records = len(all_results)
@@ -257,12 +272,6 @@ def main():
     plot_monthly_complaints(results_df, borough, start_year, end_year, export_folder)
     plot_top_complaint_types(results_df, borough, start_year, end_year, total_records, export_folder)
     plot_seasonality_heatmap(results_df, borough, start_year, end_year, export_folder)
-
-    #Print some summary statistics
-    print(f"""Between {start_year} and {end_year} there were {len(results_df)} complaints. 
-    The day of the week with the most complaints was {results_df['day_of_week'].value_counts().idxmax()} 
-    while the month with the most complaints was {results_df['month'].value_counts().idxmax()}. 
-    The three most common complaint types were {results_df['complaint_type'].value_counts().head(3).index.tolist()}.""")
 
 if __name__ == "__main__":
     main()
