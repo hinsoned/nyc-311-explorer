@@ -74,3 +74,6 @@ This project uses Python and the following libraries:
    - Enter a **borough** (`Bronx`, `Brooklyn`, `Manhattan`, `Queens`, `Staten Island`)  
 
 6. **Wait while data is fetched** from the NYC Open Data API. Depending on the range of years selected, this may take a few minutes.
+
+## Notes
+I anticipate adding more phases to this project in the future including a hosted web app that would allow real time manipulation of parameters such as date range and borough, the elimination of the lengthy API call phase,and the addition of predictions about future 311 complains using regressions or ML.
