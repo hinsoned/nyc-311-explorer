@@ -42,7 +42,7 @@ The focus remains on NYPD-related complaints, but Phase 2 expands flexibility an
 ![Manhattan Heatmap](screenshots/MANHATTAN_heatmap.png)
 
 **Manhattan Monthly Complaints**  
-![Manhattan Monthly Complaints](screenshots/MANHATTAN_monthly_complaints.png)
+![Manhattan Monthly Complaints](screenshots/MANHATTAN_complaints.png)
 
 ---
 
