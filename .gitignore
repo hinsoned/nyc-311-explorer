@@ -1,4 +1,4 @@
 *.csv
 *.png
-*.png
-BRONX_monthly_complaints.png
+!MANHATTAN_heatmap.png
+!MANHATTAN_complaints.png
